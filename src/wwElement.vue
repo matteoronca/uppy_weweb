@@ -1,18 +1,15 @@
 <template>
   <div>
+    <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css">
     <div ref="uppyRoot"></div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
-
 import Uppy from "@uppy/core";
 import Dashboard from "@uppy/dashboard";
 import AwsS3 from "@uppy/aws-s3";
-
-import "@uppy/core/dist/style.css";
-import "@uppy/dashboard/dist/style.css";
 
 const props = defineProps({
   presignEndpoint: { type: String, required: true },
@@ -25,7 +22,7 @@ const props = defineProps({
 const emit = defineEmits(["upload-success", "upload-error"]);
 
 const uppyRoot = ref(null);
-let uppy;
+let uppy = null;
 
 function sanitizeName(name) {
   return String(name || "file").replace(/[^\w.\-]+/g, "_");
@@ -65,7 +62,6 @@ onMounted(() => {
       const data = await res.json();
       if (!data?.url) throw new Error("presign response missing url");
 
-      // Uppy farà PUT diretto su Wasabi
       return {
         method: "PUT",
         url: data.url,
@@ -78,21 +74,15 @@ onMounted(() => {
   });
 
   uppy.on("upload-success", (file, response) => {
-    emit("upload-success", {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      response,
-    });
+    emit("upload-success", { name: file.name, size: file.size, response });
   });
 
   uppy.on("upload-error", (file, error) => {
-    emit("upload-error", {
-      name: file?.name,
-      error: String(error?.message || error),
-    });
+    emit("upload-error", { name: file?.name, error: String(error?.message || error) });
   });
 });
 
-onBeforeUnmount(() => uppy?.close?.());
+onBeforeUnmount(() => {
+  try { uppy?.close?.(); } catch (_) {}
+});
 </script>

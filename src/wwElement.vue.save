@@ -1,0 +1,20 @@
+<template>
+  <div class="my-element">
+    <p :style="textStyle">I am a custom element !</p>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    content: { type: Object, required: tr:wq
+
+
+
+
+
+
+
+
+
+

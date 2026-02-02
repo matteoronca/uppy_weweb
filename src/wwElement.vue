@@ -49,7 +49,7 @@ onMounted(() => {
         "Content-Type": "application/json",
         apikey: props.supabaseAnonKey,
       };
-      if (props.bearerToken) headers["Authorization"] = `Bearer ${props.bearerToken}`;
+      if (props.bearerToken) headers.Authorization = `Bearer ${props.bearerToken}`;
 
       const res = await fetch(props.presignEndpoint, {
         method: "POST",
@@ -65,24 +65,34 @@ onMounted(() => {
       const data = await res.json();
       if (!data?.url) throw new Error("presign response missing url");
 
+      // Uppy farà PUT diretto su Wasabi
       return {
         method: "PUT",
         url: data.url,
-        headers: { "Content-Type": file.type || "application/octet-stream" },
+        fields: {},
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+        },
       };
     },
   });
 
   uppy.on("upload-success", (file, response) => {
-    emit("upload-success", { name: file.name, size: file.size, response });
+    emit("upload-success", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      response,
+    });
   });
 
   uppy.on("upload-error", (file, error) => {
-    emit("upload-error", { name: file?.name, error: String(error?.message || error) });
+    emit("upload-error", {
+      name: file?.name,
+      error: String(error?.message || error),
+    });
   });
 });
 
-onBeforeUnmount(() => {
-  uppy?.close?.();
-});
+onBeforeUnmount(() => uppy?.close?.());
 </script>
